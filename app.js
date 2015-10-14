@@ -54,6 +54,12 @@ passport.deserializeUser(function(user, done) {
   done(null, user);
 });
 
+app.use(function(req, res, next) {
+  if (req.session.passport) res.locals.user = req.session.passport.user;
+  else user = "";
+  next();
+});
+
 app.use('/', routes);
 app.use('/users', users);
 
@@ -67,6 +73,11 @@ app.get('/auth/linkedin/callback',
     successRedirect: '/',
     failureRedirect: '/login'
 }));
+
+app.get('/logout', function(req, res, next) {
+  req.session = null;
+  res.redirect('/');
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
