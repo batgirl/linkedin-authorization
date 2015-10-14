@@ -4,13 +4,13 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var LinkedInStrategy = require('passport-linkedin-oauth2').Strategy;
-var passport = require('passport');
-require('dotenv').load();
-var cookieSession = require('cookie-session');
-
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var cookieSession = require('cookie-session');
+var passport = require('passport');
+var LinkedInStrategy = require('passport-linkedin-oauth2').Strategy;
+require('dotenv').load();
+
 
 var app = express();
 
@@ -25,24 +25,22 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(cookieSession({
+  keys: ['key1']
+}))
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(cookieSession({
-  name: 'passportSession',
-  keys: [
-  process.env.SESSION_KEY_1,
-  process.env.SESSION_KEY_2,
-  process.env.SESSION_KEY_3
-  ]
-}))
 
 passport.use(new LinkedInStrategy({
   clientID: process.env.LINKEDIN_CLIENT_ID,
   clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
   callbackURL: "http://127.0.0.1:3000/auth/linkedin/callback",
-  scope: ['r_emailaddress', 'r_basicprofile']
+  scope: ['r_emailaddress', 'r_basicprofile'],
+  state: true
 }, function(accessToken, refreshToken, profile, done) {
+  process.nextTick(function() {
     return done(null, {id: profile.id, displayName: profile.displayName, token: accessToken});  
+  })
   }
 ));
 
@@ -55,29 +53,25 @@ passport.deserializeUser(function(user, done) {
 });
 
 app.use(function(req, res, next) {
-  if (req.session.passport) res.locals.user = req.session.passport.user;
-  else user = "";
+  res.locals.user = req.user;
   next();
 });
 
 app.use('/', routes);
 app.use('/users', users);
 
-app.get('/auth/linkedin', 
-  passport.authenticate('linkedin', { state: "SOME STATE"}),
-  function(req, res) {
-});
-
-app.get('/auth/linkedin/callback', 
-  passport.authenticate('linkedin', {
-    successRedirect: '/',
-    failureRedirect: '/login'
-}));
+app.get('/auth/linkedin', passport.authenticate('linkedin'));
 
 app.get('/logout', function(req, res, next) {
   req.session = null;
   res.redirect('/');
 });
+
+app.get('/auth/linkedin/callback',
+  passport.authenticate('linkedin', {
+    failureRedirect: '/',
+    successRedirect: '/'
+  }));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

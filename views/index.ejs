@@ -16,6 +16,9 @@
         <a href="/auth/linkedin">Login</a>
       </p>
     <% } %>
+    <% if (profile) { %>
+      <img src="<%= profile.pictureUrl %>">
+    <% } %>
     <h1><%= title %></h1>
     <p>Welcome to <%= title %></p>
   </body>
