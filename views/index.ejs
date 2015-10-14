@@ -5,6 +5,17 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
   <body>
+    <% if (user) { %>
+      <p>
+        Hello <%= user.displayName %>
+        |
+        <a href="/logout">Logout</a>
+      </p>
+    <% } else { %>
+      <p>
+        <a href="/auth/linkedin">Login</a>
+      </p>
+    <% } %>
     <h1><%= title %></h1>
     <p>Welcome to <%= title %></p>
   </body>

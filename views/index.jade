@@ -1,0 +1,10 @@
+extends layout
+
+  if user
+    p
+      |Hello #{user.displayName}
+      ||
+      a(href="/logout") Logout
+  else
+    p
+      a(href="/auth/linkedin") Login
